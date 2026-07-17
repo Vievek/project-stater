@@ -1,0 +1,24 @@
+{
+  "name": "next-express-monolith",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter backend run dev",
+    "dev:frontend": "pnpm --filter frontend run dev",
+    "dev": "pnpm run dev:backend & pnpm run dev:frontend",
+    "build:backend": "pnpm --filter backend run build",
+    "build:frontend": "pnpm --filter frontend run build",
+    "build": "pnpm run build:backend && pnpm run build:frontend",
+    "test:backend": "pnpm --filter backend run test",
+    "test:frontend": "pnpm --filter frontend run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@typescript-eslint/eslint-plugin": "^8.64.0",
+    "@typescript-eslint/parser": "^8.64.0",
+    "eslint": "^9.39.5"
+  }
+}

@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/generated/prisma"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Todo {
+  id        String   @id @default(uuid())
+  title     String
+  completed Boolean  @default(false)
+  userId    String             // FK → User (one-to-many: User has many Todos)
+  user      User     @relation(fields: [userId], references: [id])          // relation object (owning side)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  password  String
+  role      String   @default("USER") // USER, ADMIN, etc.
+  todos     Todo[]             // inverse relation (one User has many Todos)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

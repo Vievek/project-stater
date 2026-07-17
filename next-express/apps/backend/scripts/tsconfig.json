@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "module": "CommonJS"
+  },
+  "include": ["./**/*.ts"],
+  "exclude": [
+    // Template files use import paths relative to their destination (src/modules/<name>/).
+    // They are intentionally NOT compilable from the scripts/ directory — they only
+    // make sense after `generate_module` copies them into src/modules/.
+    "./generator_scripts/templates/**"
+  ]
+}
+
