@@ -14,7 +14,10 @@ export default [
       parserOptions: {
         ecmaVersion: 2020,
         sourceType: "module",
-        project: ["./apps/backend/tsconfig.json", "./apps/frontend/tsconfig.json"],
+        project: [
+          "./apps/backend/tsconfig.json",
+          "./apps/frontend/tsconfig.json",
+        ],
       },
     },
     plugins: {
@@ -160,6 +163,14 @@ export default [
   },
   // Ignore patterns
   {
-    ignores: ["node_modules/", "dist/", ".next/", "build/"],
+    ignores: [
+      "node_modules/",
+      "dist/",
+      ".next/",
+      "build/",
+      "apps/backend/scripts/**",
+      "docs/**",
+      "README.md",
+    ],
   },
 ];
