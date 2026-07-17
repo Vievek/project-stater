@@ -31,3 +31,13 @@ This is a modern full-stack application leveraging the power of Next.js and Expr
 
 ## Documentation
 Please refer to the `docs/rules/` directory for strict development guidelines, styling rules, and architectural patterns.
+
+## API Route Docs
+The file [`docs/api-routes.md`](./docs/api-routes.md) documents every backend API route (method, path, auth, body schema, response shape).
+
+It is **auto-generated** — do not edit it manually. To regenerate after adding a module or changing routes:
+
+```bash
+pnpm --filter backend run docs:routes
+```
+

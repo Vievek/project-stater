@@ -18,7 +18,7 @@ export function createTodoModule(deps: AppDeps): AppModule {
   const repository = new TodoRepository(deps.db.todo, deps.cacheService, relations);
   const service     = new TodoService(repository, deps.cacheService, deps.transactionManager);
   const controller  = new TodoController(service);
-  const router      = createTodoRouter(controller);
+  const router      = createTodoRouter(controller, deps.tokenProvider);
 
   return { prefix: '/api/todos', router };
 }

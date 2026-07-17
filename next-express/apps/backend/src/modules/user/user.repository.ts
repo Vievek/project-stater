@@ -20,7 +20,6 @@ export class UserRepository extends BaseRepository<User> {
     }, 30);
   }
 
-  // Custom method for specific sorting
   async findAllLatest(options?: QueryOptions): Promise<User[]> {
     logger.info(`[${this.constructor.name}.findAllLatest] Finding all latest`, { options });
     return this.cacheManager.withCache(
@@ -37,4 +36,13 @@ export class UserRepository extends BaseRepository<User> {
       }
     );
   }
+
+  /** Look up a user by their unique email address (used for login and duplicate-email checks). */
+  async findByEmail(email: string): Promise<User | null> {
+    logger.info(`[${this.constructor.name}.findByEmail] Finding by email`);
+    // Prisma guarantees email uniqueness — cast to any to access findFirst
+    // which is not part of the minimal IDbClient interface.
+    return (this.db as any).findUnique({ where: { email } });
+  }
 }
+

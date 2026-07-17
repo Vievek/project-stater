@@ -11,16 +11,19 @@
  *
  * That's it — container.ts and app.ts remain untouched.
  */
-import { Router } from "express";
-import { AppDb } from "../infrastructure/db";
-import { ICacheService } from "../base-classes/base.repository";
-import { ITransactionManager } from "../utils/transaction-manager";
+import { Router } from 'express';
+import { AppDb } from '../infrastructure/db';
+import { ICacheService } from '../base-classes/base.repository';
+import { ITransactionManager } from '../utils/transaction-manager';
+import { ITokenProvider } from '../infrastructure/token-provider';
 
 /** Shared dependencies injected into every module factory. */
 export interface AppDeps {
   db: AppDb;
   cacheService: ICacheService;
   transactionManager: ITransactionManager<AppDb>;
+  /** Token signing/verification strategy — swap implementation in container.ts. */
+  tokenProvider: ITokenProvider;
 }
 
 /** The value every module factory must return. */
@@ -31,17 +34,19 @@ export interface AppModule {
 }
 
 // ─── Import module factories ─────────────────────────────────────────────────
-import { createTodoModule } from "./todo/todo.module";
-import { createHealthModule } from "./health/health.module";
-import { createUserModule } from "./user/user.module";
-import { createTagModule } from "./tag/tag.module";
-import { createCategoryModule } from "./category/category.module";
+import { createTodoModule } from './todo/todo.module';
+import { createHealthModule } from './health/health.module';
+import { createUserModule } from './user/user.module';
+import { createTagModule } from './tag/tag.module';
+import { createCategoryModule } from './category/category.module';
+import { createAuthModule } from './auth/auth.module';
 
 // ─── Register modules here ───────────────────────────────────────────────────
 export const moduleFactories: Array<(deps: AppDeps) => AppModule> = [
   createHealthModule,
   createTodoModule,
-    createUserModule,
-    createTagModule,
-    createCategoryModule
+  createUserModule,
+  createTagModule,
+  createCategoryModule,
+  createAuthModule,
 ];
