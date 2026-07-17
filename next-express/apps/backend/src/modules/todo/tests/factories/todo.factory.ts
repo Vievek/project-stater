@@ -1,5 +1,5 @@
 import { Todo } from '../../todo.types';
-import { User } from '../../user/user.types';
+import { User } from '../../../user/user.types';
 
 let _seq = 0;
 const next = () => ++_seq;

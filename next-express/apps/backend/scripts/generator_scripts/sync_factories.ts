@@ -158,7 +158,7 @@ function generateFactory(model: ModelInfo, allModelNames: Set<string>): string {
   for (const rf of relationFields) {
     const relLower = camelCase(rf.relatedModel!);
     relatedImports.push(
-      `import { ${rf.relatedModel} } from '../../${relLower}/${relLower}.types';`,
+      `import { ${rf.relatedModel} } from '../../../${relLower}/${relLower}.types';`,
     );
   }
 

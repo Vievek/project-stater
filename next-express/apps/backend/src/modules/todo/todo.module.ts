@@ -12,7 +12,7 @@ import { createTodoRouter } from './todo.routes';
  * via injection — it never imports from config/ or infrastructure/ directly.
  */
 export function createTodoModule(deps: AppDeps): AppModule {
-  const repository  = new TodoRepository(deps.db.todo, deps.db.user, deps.cacheService);
+  const repository  = new TodoRepository(deps.db.todo, deps.cacheService);
   const service     = new TodoService(repository, deps.cacheService, deps.transactionManager);
   const controller  = new TodoController(service);
   const router      = createTodoRouter(controller);
