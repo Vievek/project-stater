@@ -20,7 +20,8 @@
     "sync-schemas": "ts-node --project scripts/tsconfig.json scripts/generator_scripts/sync_schemas.ts",
     "sync-factories": "ts-node --project scripts/tsconfig.json scripts/generator_scripts/sync_factories.ts",
     "sync-query-config": "ts-node --project scripts/tsconfig.json scripts/generator_scripts/sync_query_config.ts",
-    "sync": "pnpm run generate && pnpm run sync-types && pnpm run sync-schemas && pnpm run sync-factories && pnpm run sync-query-config"
+    "sync-m2m-methods": "ts-node --project scripts/tsconfig.json scripts/generator_scripts/sync_m2m_methods.ts",
+    "sync": "pnpm run generate && pnpm run sync-types && pnpm run sync-schemas && pnpm run sync-factories && pnpm run sync-query-config && pnpm run sync-m2m-methods"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

@@ -1,15 +1,15 @@
-import { UserService } from '../../user.service';
-import { UserRepository } from '../../user.repository';
+import { TagService } from '../../tag.service';
+import { TagRepository } from '../../tag.repository';
 import { ICacheService } from '../../../../utils/cache-manager';
 import { ITransactionManager } from '../../../../utils/transaction-manager';
-import { buildUserList } from '../factories/user.factory';
+import { buildTagList } from '../factories/tag.factory';
 import fc from 'fast-check';
 
-describe('UserService (Property Tests)', () => {
-  let mockRepository: Partial<UserRepository>;
+describe('TagService (Property Tests)', () => {
+  let mockRepository: Partial<TagRepository>;
   let mockCacheService: ICacheService;
   let mockTxManager: Partial<ITransactionManager>;
-  let service: UserService;
+  let service: TagService;
 
   beforeEach(() => {
     mockRepository = {
@@ -25,27 +25,27 @@ describe('UserService (Property Tests)', () => {
       runInTransaction: jest.fn().mockImplementation((callback) => callback({})),
     };
 
-    service = new UserService(
-      mockRepository as UserRepository,
+    service = new TagService(
+      mockRepository as TagRepository,
       mockCacheService,
       mockTxManager as ITransactionManager
     );
   });
 
-  describe('getUserSummary', () => {
+  describe('getTagSummary', () => {
     it('should calculate summary and cache the result (fast-check edge cases)', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.integer({ min: 0, max: 100 }), 
           async (total) => {
-            const users = buildUserList(total);
+            const tags = buildTagList(total);
             
-            (mockRepository.findAllLatest as jest.Mock).mockResolvedValue(users);
+            (mockRepository.findAllLatest as jest.Mock).mockResolvedValue(tags);
             
-            const result = await service.getUserSummary();
+            const result = await service.getTagSummary();
             
             expect(result).toEqual({ total });
-            expect(mockCacheService.getOrSet).toHaveBeenCalledWith('user:svc:summary', expect.any(Function), 120);
+            expect(mockCacheService.getOrSet).toHaveBeenCalledWith('tag:svc:summary', expect.any(Function), 120);
           }
         ),
         { numRuns: 100 }

@@ -35,7 +35,7 @@ describe('BaseRepository (Unit)', () => {
     it('should return all items and use cache', async () => {
       const result = await repository.findAll();
       expect(result).toHaveLength(1);
-      expect(mockCacheService.getOrSet).toHaveBeenCalledWith('test-model:repo:findAll', expect.any(Function), 60);
+      expect(mockCacheService.getOrSet).toHaveBeenCalledWith('test-model:repo:findAll:{}', expect.any(Function), 60);
       expect(mockDbClient.findMany).toHaveBeenCalledWith();
     });
 

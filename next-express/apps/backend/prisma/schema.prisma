@@ -12,11 +12,29 @@ datasource db {
 }
 
 model Todo {
+  id         String     @id @default(uuid())
+  title      String
+  completed  Boolean    @default(false)
+  userId     String             // FK → User (one-to-many: User has many Todos)
+  user       User       @relation(fields: [userId], references: [id])          // relation object (owning side)
+  tags       Tag[]      // M2M with Tag
+  categories Category[] // M2M with Category
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Tag {
   id        String   @id @default(uuid())
-  title     String
-  completed Boolean  @default(false)
-  userId    String             // FK → User (one-to-many: User has many Todos)
-  user      User     @relation(fields: [userId], references: [id])          // relation object (owning side)
+  name      String   @unique
+  todos     Todo[]   // M2M with Todo
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  todos     Todo[]   // M2M with Todo
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

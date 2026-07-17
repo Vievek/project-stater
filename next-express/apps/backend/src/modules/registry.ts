@@ -34,10 +34,14 @@ export interface AppModule {
 import { createTodoModule } from "./todo/todo.module";
 import { createHealthModule } from "./health/health.module";
 import { createUserModule } from "./user/user.module";
+import { createTagModule } from "./tag/tag.module";
+import { createCategoryModule } from "./category/category.module";
 
 // ─── Register modules here ───────────────────────────────────────────────────
 export const moduleFactories: Array<(deps: AppDeps) => AppModule> = [
   createHealthModule,
   createTodoModule,
-    createUserModule
+    createUserModule,
+    createTagModule,
+    createCategoryModule
 ];

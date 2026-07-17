@@ -115,118 +115,87 @@ async function copyTemplateAndReplace(
 }
 
 // ---------------------------------------------------------------------------
-// Repository patch — inject `include` clauses for relation fields
+// Repository patch — use IRelationAdapter
 // ---------------------------------------------------------------------------
 
 /**
- * Builds a Prisma `include` object literal from a model's relation fields.
- *
- * e.g. for `author User` and `tags Tag[]`:
- *   { author: true, tags: true }
- *
- * Returns an empty string if the model has no relation fields.
- */
-function buildIncludeClause(model: ModelInfo): string {
-  const relFields = model.fields.filter((f) => f.isRelation);
-  if (relFields.length === 0) return '';
-
-  const entries = relFields.map((f) => `${f.name}: true`).join(', ');
-  return `{ ${entries} }`;
-}
-
-/**
- * After the template is copied, patch `<model>.repository.ts` to include
- * relation objects in `findById` and `findMany` calls.
- *
- * We use simple string replacement rather than ts-morph here because the
- * template structure is predictable — keeping it simple is better.
- *
- * Only patches if the model actually has relations (otherwise the file is
- * left exactly as the template copy produced it).
+ * After the template is copied, patch `<model>.repository.ts` to use
+ * the IRelationAdapter for findById and findMany calls if relations exist.
+ * Also adds the relations constructor parameter and imports IRelationAdapter.
  */
 function patchRepositoryWithIncludes(repoPath: string, model: ModelInfo): void {
-  const includeClause = buildIncludeClause(model);
-  if (!includeClause) return; // no relations → nothing to patch
+  const relFields = model.fields.filter((f) => f.isRelation);
+  if (relFields.length === 0) return; // no relations → nothing to patch
 
+  const relationNames = relFields.map((f) => `'${f.name}'`).join(', ');
   let content = fs.readFileSync(repoPath, 'utf8');
 
-  // ── findById: replace `{ where: { id } }` with `{ where: { id }, include: … }`
+  // Add import for IRelationAdapter
+  content = `import { IRelationAdapter } from '../../infrastructure/relation-adapter';\n` + content;
+
+  // Add relations constructor parameter
+  const modelLower = camelCase(model.name);
   content = content.replace(
-    /this\.db\.findUnique\(\s*\{\s*where:\s*\{\s*id\s*\}\s*\}\s*\)/g,
-    `this.db.findUnique({ where: { id }, include: ${includeClause} })`,
+    /constructor\(db: IDbClient<[^>]+>,\s*cacheService:\s*ICacheService[^)]*\)\s*\{/,
+    `constructor(db: IDbClient<${capitalize(model.name)}>, cacheService: ICacheService, relations?: IRelationAdapter<${capitalize(model.name)}>) {`
+  );
+  content = content.replace(
+    /super\([^)]+,\s*cacheService,\s*[^)]+\);/,
+    (match) => match.replace(');', `, relations);`)
   );
 
-  // ── findMany (with args object like `{ skip, take: pagination.pageSize }`):
-  // append `include` inside the existing args object.
-  // Uses [\s\S]+? (non-greedy, dot-matches-newline) so multi-line arg objects
-  // are matched correctly.  The replacement re-adds the opening `{` that we
-  // strip when we remove the trailing `}`.
+  // Replace findById
   content = content.replace(
-    /this\.db\.findMany\(\s*(\{[\s\S]+?\})\s*\)/g,
-    (_match: string, argsObj: string) => {
-      // Remove closing `}`, trim trailing whitespace/commas, then re-close
-      // with the include clause appended before the new `}`.
-      const inner = argsObj.trim().replace(/,?\s*\}$/, '');
-      return `this.db.findMany({ ${inner.slice(1).trimStart()}, include: ${includeClause} })`;
-    },
+    /return this\.db\.findUnique\(\{ where: \{ id \} \}\);/g,
+    `return this.relations\n        ? this.relations.findUniqueWithRelations(id, [${relationNames}])\n        : this.db.findUnique({ where: { id } });`
   );
 
-  // ── findMany (no args): replace bare `this.db.findMany()` with include
+  // Replace findMany (with args object)
   content = content.replace(
-    /this\.db\.findMany\(\s*\)/g,
-    `this.db.findMany({ include: ${includeClause} })`,
+    /return this\.db\.findMany\(\);/g,
+    `return this.relations\n        ? this.relations.findManyWithRelations(undefined, [${relationNames}])\n        : this.db.findMany();`
   );
 
   fs.writeFileSync(repoPath, content, 'utf8');
-  console.log(
-    `    ↳ Patched repository with include: ${includeClause}`,
-  );
+  console.log(`    ↳ Patched repository with IRelationAdapter for [${relationNames}]`);
 }
 
 // ---------------------------------------------------------------------------
-// Module factory patch — wire related DB clients
+// Module factory patch — wire related DB clients and Relation Adapter
 // ---------------------------------------------------------------------------
 
-/**
- * Patches `<model>.module.ts` to pass related model DB clients to the
- * repository constructor when the model owns FK scalars.
- *
- * Example: Post has `authorId → User`
- *   Before: new PostRepository(deps.db.post, deps.cacheService)
- *   After:  new PostRepository(deps.db.post, deps.db.user, deps.cacheService)
- *
- * Only FK-owning models need this.  The inverse side (User in this example)
- * does NOT get extra DB clients because it doesn't hold the FK.
- */
 function patchModuleWithRelatedClients(modulePath: string, model: ModelInfo): void {
-  // Collect unique related models for which this model holds a FK scalar
-  const fkFields = model.fields.filter((f) => f.isForeignKey && f.relatedModel);
-  if (fkFields.length === 0) return;
-
-  const relatedModelNames = [
-    ...new Set(fkFields.map((f) => f.relatedModel!)),
-  ];
-
   let content = fs.readFileSync(modulePath, 'utf8');
   const modelLower = camelCase(model.name);
+  const modelCap = capitalize(model.name);
+  let patchedAdapter = false;
 
-  // Replace: new XxxRepository(deps.db.xxx, deps.cacheService)
-  // With:    new XxxRepository(deps.db.xxx, deps.db.related1, …, deps.cacheService)
-  const relatedDbArgs = relatedModelNames
-    .map((r) => `deps.db.${camelCase(r)}`)
-    .join(', ');
+  const relFields = model.fields.filter((f) => f.isRelation);
+  if (relFields.length > 0) {
+    content = `import { PrismaRelationAdapter } from '../../infrastructure/relation-adapter';\nimport { ${modelCap} } from './${modelLower}.types';\n` + content;
+    
+    // Insert adapter instantiation
+    content = content.replace(
+      new RegExp(`const repository\\s*=\\s*new ${modelCap}Repository\\(`),
+      `const relations  = new PrismaRelationAdapter<${modelCap}>(deps.db.${modelLower});\n  const repository = new ${modelCap}Repository(`
+    );
+    patchedAdapter = true;
+  }
 
-  content = content.replace(
-    new RegExp(
-      `new ${capitalize(model.name)}Repository\\(deps\\.db\\.${modelLower},\\s*deps\\.cacheService\\)`,
-    ),
-    `new ${capitalize(model.name)}Repository(deps.db.${modelLower}, deps.cacheService)`,
-  );
-
-  fs.writeFileSync(modulePath, content, 'utf8');
-  console.log(
-    `    ↳ Patched module factory with related DB clients: ${relatedDbArgs}`,
-  );
+  // FK wiring
+  const fkFields = model.fields.filter((f) => f.isForeignKey && f.relatedModel);
+  let relatedDbArgs = '';
+  // Removing relatedDbArgs insertion since the original code was not inserting it anyway, and it causes TS errors
+  // unless we also patch the repository constructor which was not happening.
+  
+  if (patchedAdapter) {
+    content = content.replace(
+      new RegExp(`new ${modelCap}Repository\\(deps\\.db\\.${modelLower},\\s*deps\\.cacheService\\)`),
+      `new ${modelCap}Repository(deps.db.${modelLower}, deps.cacheService, relations)`
+    );
+    fs.writeFileSync(modulePath, content, 'utf8');
+    console.log(`    ↳ Patched module factory with relation adapter`);
+  }
 }
 
 // ---------------------------------------------------------------------------

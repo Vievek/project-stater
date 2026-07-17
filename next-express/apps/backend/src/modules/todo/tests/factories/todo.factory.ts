@@ -1,5 +1,7 @@
 import { Todo } from '../../todo.types';
 import { User } from '../../../user/user.types';
+import { Tag } from '../../../tag/tag.types';
+import { Category } from '../../../category/category.types';
 
 let _seq = 0;
 const next = () => ++_seq;
@@ -7,7 +9,7 @@ const next = () => ++_seq;
 /**
  * Builds a full Todo object with sensible defaults.
  *
- * Relation fields (user)
+ * Relation fields (user, tags, categories)
  * are NOT included — they are only present when Prisma's `include` option is used
  * in the repository. Use `buildTodoWithRelations` when you need nested data.
  */
@@ -65,6 +67,8 @@ export function buildUpdateTodoPayload(
  *
  * Relationship patterns that produce relation fields on this model:
  *   user (One-to-One / Many-to-One (single))
+ *   tags (One-to-Many / Many-to-Many (list))
+ *   categories (One-to-Many / Many-to-Many (list))
  *
  * @example
  *   import { buildTodoWithRelations } from './todo.factory';
@@ -78,6 +82,8 @@ export function buildTodoWithRelations(
   overrides: Partial<Todo> = {},
   relations: {
     user?: User;
+    tags?: Tag[];
+    categories?: Category[];
   } = {},
 ): Todo {
   return { ...buildTodo(overrides), ...relations };

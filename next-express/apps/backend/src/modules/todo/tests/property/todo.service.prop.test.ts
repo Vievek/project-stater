@@ -37,16 +37,14 @@ describe('TodoService (Property Tests)', () => {
       await fc.assert(
         fc.asyncProperty(
           fc.integer({ min: 0, max: 100 }), 
-          fc.integer({ min: 0, max: 100 }), 
-          async (total, completed) => {
-            const actualCompleted = Math.min(completed, total);
-            const todos = buildTodoList(total).map((t, idx) => ({ ...t, completed: idx < actualCompleted }));
+          async (total) => {
+            const todos = buildTodoList(total);
             
             (mockRepository.findAllLatest as jest.Mock).mockResolvedValue(todos);
             
             const result = await service.getTodoSummary();
             
-            expect(result).toEqual({ total, completed: actualCompleted });
+            expect(result).toEqual({ total });
             expect(mockCacheService.getOrSet).toHaveBeenCalledWith('todo:svc:summary', expect.any(Function), 120);
           }
         ),

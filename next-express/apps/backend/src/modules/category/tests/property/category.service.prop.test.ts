@@ -1,15 +1,15 @@
-import { UserService } from '../../user.service';
-import { UserRepository } from '../../user.repository';
+import { CategoryService } from '../../category.service';
+import { CategoryRepository } from '../../category.repository';
 import { ICacheService } from '../../../../utils/cache-manager';
 import { ITransactionManager } from '../../../../utils/transaction-manager';
-import { buildUserList } from '../factories/user.factory';
+import { buildCategoryList } from '../factories/category.factory';
 import fc from 'fast-check';
 
-describe('UserService (Property Tests)', () => {
-  let mockRepository: Partial<UserRepository>;
+describe('CategoryService (Property Tests)', () => {
+  let mockRepository: Partial<CategoryRepository>;
   let mockCacheService: ICacheService;
   let mockTxManager: Partial<ITransactionManager>;
-  let service: UserService;
+  let service: CategoryService;
 
   beforeEach(() => {
     mockRepository = {
@@ -25,27 +25,27 @@ describe('UserService (Property Tests)', () => {
       runInTransaction: jest.fn().mockImplementation((callback) => callback({})),
     };
 
-    service = new UserService(
-      mockRepository as UserRepository,
+    service = new CategoryService(
+      mockRepository as CategoryRepository,
       mockCacheService,
       mockTxManager as ITransactionManager
     );
   });
 
-  describe('getUserSummary', () => {
+  describe('getCategorySummary', () => {
     it('should calculate summary and cache the result (fast-check edge cases)', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.integer({ min: 0, max: 100 }), 
           async (total) => {
-            const users = buildUserList(total);
+            const categorys = buildCategoryList(total);
             
-            (mockRepository.findAllLatest as jest.Mock).mockResolvedValue(users);
+            (mockRepository.findAllLatest as jest.Mock).mockResolvedValue(categorys);
             
-            const result = await service.getUserSummary();
+            const result = await service.getCategorySummary();
             
             expect(result).toEqual({ total });
-            expect(mockCacheService.getOrSet).toHaveBeenCalledWith('user:svc:summary', expect.any(Function), 120);
+            expect(mockCacheService.getOrSet).toHaveBeenCalledWith('category:svc:summary', expect.any(Function), 120);
           }
         ),
         { numRuns: 100 }

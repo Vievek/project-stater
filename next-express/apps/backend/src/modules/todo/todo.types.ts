@@ -1,3 +1,5 @@
+import { Category } from '../category/category.types';
+import { Tag } from '../tag/tag.types';
 import { User } from '../user/user.types';
 
 /**
@@ -15,6 +17,10 @@ export interface Todo {
   userId: string;
   /** Hydrated via `include: { user: true }` in the repository. */
   user?: User;
+  /** Hydrated via `include: { tags: true }` in the repository. */
+  tags?: Tag[];
+  /** Hydrated via `include: { categories: true }` in the repository. */
+  categories?: Category[];
   createdAt: Date;
   updatedAt: Date;
 }

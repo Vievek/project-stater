@@ -1,3 +1,5 @@
+import { PrismaRelationAdapter } from '../../infrastructure/relation-adapter';
+import { Todo } from './todo.types';
 import { AppDeps, AppModule } from '../registry';
 import { TodoRepository } from './todo.repository';
 import { TodoService } from './todo.service';
@@ -12,7 +14,8 @@ import { createTodoRouter } from './todo.routes';
  * via injection — it never imports from config/ or infrastructure/ directly.
  */
 export function createTodoModule(deps: AppDeps): AppModule {
-  const repository  = new TodoRepository(deps.db.todo, deps.cacheService);
+  const relations  = new PrismaRelationAdapter<Todo>(deps.db.todo);
+  const repository = new TodoRepository(deps.db.todo, deps.cacheService, relations);
   const service     = new TodoService(repository, deps.cacheService, deps.transactionManager);
   const controller  = new TodoController(service);
   const router      = createTodoRouter(controller);

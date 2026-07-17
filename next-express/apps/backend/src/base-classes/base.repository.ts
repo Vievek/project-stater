@@ -26,6 +26,8 @@ export interface IRepository<T> {
   deleteAll(): Promise<void>;
 }
 
+import { IRelationAdapter } from '../infrastructure/relation-adapter';
+
 export abstract class BaseRepository<T> implements IRepository<T> {
   protected db: IDbClient<T>;
   protected cacheManager: CacheManager;
@@ -36,7 +38,8 @@ export abstract class BaseRepository<T> implements IRepository<T> {
     modelName: string,
     cacheOpts?: Partial<CacheOptions>,
     cacheService?: ICacheService,
-    queryConfig?: QueryFieldConfig
+    queryConfig?: QueryFieldConfig,
+    protected relations?: IRelationAdapter<T>
   ) {
     this.db = dbClient;
     this.cacheManager = new CacheManager(modelName, cacheOpts, cacheService);
