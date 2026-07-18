@@ -16,7 +16,7 @@ export function buildRegisterPayload(
   return {
     name:     `New User ${seq}`,
     email:    `newuser${seq}@example.com`,
-    password: 'ValidPass123',
+    password: 'ValidP123!',
     ...overrides,
   };
 }
@@ -30,7 +30,7 @@ export function buildLoginPayload(
   const seq = next();
   return {
     email:    `user${seq}@example.com`,
-    password: 'ValidPass123',
+    password: 'ValidP123!',
     ...overrides,
   };
 }

@@ -7,11 +7,12 @@ import { AppError } from '../../utils/AppError';
 import { logger } from '../../utils/logger';
 
 const BCRYPT_ROUNDS = 12;
+const DUMMY_HASH = '$2b$12$dummyhashdummyhashdummyhashdummyhashdummyhashdummyha';
 
 export class AuthService {
   constructor(
     private repository: UserRepository,
-    private tokenProvider?: ITokenProvider,
+    private tokenProvider: ITokenProvider,
   ) {}
 
   /**
@@ -23,6 +24,9 @@ export class AuthService {
   async register(
     data: { name: string; email: string; password: string; role?: string },
   ): Promise<{ user: SafeUser; token: string }> {
+    if (!this.tokenProvider) {
+      throw new AppError('Token provider not configured', 500);
+    }
     logger.info(`[${this.constructor.name}.register] Registering user`, { email: data.email });
 
     // Check for duplicate email
@@ -51,10 +55,14 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<{ user: SafeUser; token: string }> {
+    if (!this.tokenProvider) {
+      throw new AppError('Token provider not configured', 500);
+    }
     logger.info(`[${this.constructor.name}.login] Login attempt`, { email });
 
     const user = await this.repository.findByEmail(email);
     if (!user) {
+      await bcrypt.compare(password, DUMMY_HASH);
       throw new AppError('Invalid credentials', 401);
     }
 

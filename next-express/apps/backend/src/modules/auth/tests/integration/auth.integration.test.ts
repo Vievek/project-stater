@@ -102,14 +102,26 @@ describe('Auth Module Integration Tests', () => {
 
     beforeAll(async () => {
       // Register a USER
-      const userPayload = buildRegisterPayload({ role: 'USER' });
+      const userPayload = buildRegisterPayload();
       const userRes = await request(app).post('/api/auth/register').send(userPayload);
       userToken = userRes.body.data.token;
 
       // Register an ADMIN
-      const adminPayload = buildRegisterPayload({ role: 'ADMIN' });
-      const adminRes = await request(app).post('/api/auth/register').send(adminPayload);
-      adminToken = adminRes.body.data.token;
+      const adminPayload = buildRegisterPayload();
+      await request(app).post('/api/auth/register').send(adminPayload);
+      
+      // Upgrade role in DB to ADMIN
+      await db.user.update({
+        where: { email: adminPayload.email },
+        data: { role: 'ADMIN' }
+      });
+
+      // Login to get new token with ADMIN role
+      const loginRes = await request(app).post('/api/auth/login').send({
+        email: adminPayload.email,
+        password: adminPayload.password,
+      });
+      adminToken = loginRes.body.data.token;
     });
 
     it('should deny DELETE /api/todos (deleteAll) without a token (401)', async () => {

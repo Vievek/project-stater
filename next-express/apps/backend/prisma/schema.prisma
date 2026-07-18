@@ -42,7 +42,7 @@ model Category {
 model User {
   id        String   @id @default(uuid())
   name      String
-  email     String
+  email     String   @unique
   password  String
   role      String   @default("USER") // USER, ADMIN, etc.
   todos     Todo[]             // inverse relation (one User has many Todos)

@@ -65,10 +65,7 @@ export class UserRepository extends BaseRepository<User> {
   /** Look up a user by their email address (used for login and duplicate-email checks). */
   async findByEmail(email: string): Promise<User | null> {
     logger.info(`[${this.constructor.name}.findByEmail] Finding by email`);
-    // Prisma guarantees email uniqueness — cast to any to access findFirst
-    // which is not part of the minimal IDbClient interface.
-    return (this.db as any).findFirst({ where: { email } });
+    return this.db.findUnique({ where: { email } });
   }
 }
 
-// TODO - change the findByEmail to unique and in prisma schema also to unique for email and change the relevent test files and codes related to this

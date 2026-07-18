@@ -124,7 +124,7 @@ describe('AuthService — auth methods (Unit)', () => {
     });
 
     it('throws 500 when no tokenProvider is configured', () => {
-      const service = new AuthService({} as UserRepository);
+      const service = new AuthService({} as UserRepository, undefined as unknown as ITokenProvider);
       expect(() => service.verifyToken('token')).toThrow(expect.objectContaining({ statusCode: 500 }));
     });
   });
