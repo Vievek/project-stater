@@ -1,5 +1,5 @@
 import { ApiResponse } from '../../utils/ApiResponse';
-import { UserService } from '../user/user.service';
+import { AuthService } from './auth.service';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { logger } from '../../utils/logger';
 
@@ -10,7 +10,7 @@ import { logger } from '../../utils/logger';
  * auth responses have a different shape: { user: SafeUser; token: string }.
  */
 export class AuthController {
-  constructor(private readonly service: UserService) {}
+  constructor(private readonly service: AuthService) {}
 
   register = asyncHandler(async (req, res) => {
     logger.info('[AuthController.register] Registering new user');

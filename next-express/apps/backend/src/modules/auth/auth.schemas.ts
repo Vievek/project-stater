@@ -1,12 +1,5 @@
 import { z } from 'zod';
 
-/**
- * user.schemas.extended.ts
- *
- * Custom schemas that SURVIVE sync_schemas.ts regeneration.
- * Place any auth-specific or manually-crafted schemas here.
- */
-
 // ─── Register ────────────────────────────────────────────────────────────────
 
 /**

@@ -16,7 +16,7 @@ import { createUserRouter } from './user.routes';
 export function createUserModule(deps: AppDeps): AppModule {
   const relations  = new PrismaRelationAdapter<User>(deps.db.user);
   const repository = new UserRepository(deps.db.user, deps.cacheService, relations);
-  const service    = new UserService(repository, deps.cacheService, deps.transactionManager, deps.tokenProvider);
+  const service    = new UserService(repository, deps.cacheService, deps.transactionManager);
   const controller = new UserController(service);
   const router     = createUserRouter(controller);
 

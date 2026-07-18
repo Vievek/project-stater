@@ -8,7 +8,7 @@ describe('User Module Integration Tests', () => {
   // 1. Run the standard CRUD tests via the Factory
   createCrudTests(app, '/api/users', {
     mockData: buildCreateUserPayload(),
-    updateData: buildUpdateUserPayload(),
+    updateData: buildUpdateUserPayload({ name: 'Updated Name' }),
     skip: ['GET_ALL', 'GET_BY_ID'], // overridden with custom logic
   });
 

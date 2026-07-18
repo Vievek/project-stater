@@ -2,7 +2,7 @@ import { PrismaRelationAdapter } from '../../infrastructure/relation-adapter';
 import { User } from '../user/user.types';
 import { AppDeps, AppModule } from '../registry';
 import { UserRepository } from '../user/user.repository';
-import { UserService } from '../user/user.service';
+import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { createAuthRouter } from './auth.routes';
 
@@ -17,7 +17,7 @@ import { createAuthRouter } from './auth.routes';
 export function createAuthModule(deps: AppDeps): AppModule {
   const relations  = new PrismaRelationAdapter<User>(deps.db.user);
   const repository = new UserRepository(deps.db.user, deps.cacheService, relations);
-  const service    = new UserService(repository, deps.cacheService, deps.transactionManager, deps.tokenProvider);
+  const service    = new AuthService(repository, deps.tokenProvider);
   const controller = new AuthController(service);
   const router     = createAuthRouter(controller);
 

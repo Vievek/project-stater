@@ -7,5 +7,6 @@ module.exports = {
   roots: ['<rootDir>/src'],
   // Transform all node_modules to ensure ESM is handled
   transformIgnorePatterns: [],
+  setupFiles: ['dotenv/config'],
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
 };

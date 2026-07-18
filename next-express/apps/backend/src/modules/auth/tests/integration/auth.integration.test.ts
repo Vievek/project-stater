@@ -2,9 +2,9 @@ import request from 'supertest';
 import * as fc from 'fast-check';
 import { app } from '../../../../app';
 import { db } from '../../../../infrastructure/db';
-import { buildRegisterPayload, buildLoginPayload } from '../factories/user.factory';
+import { buildRegisterPayload, buildLoginPayload } from '../factories/auth.factory';
 
-describe('Auth & User Module Integration Tests', () => {
+describe('Auth Module Integration Tests', () => {
 
   beforeAll(async () => {
     // Clear out users before testing

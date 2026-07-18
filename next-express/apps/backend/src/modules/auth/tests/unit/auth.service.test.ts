@@ -1,9 +1,8 @@
-import { UserService } from '../../user.service';
-import { UserRepository } from '../../user.repository';
-import { ICacheService } from '../../../../utils/cache-manager';
-import { ITransactionManager } from '../../../../utils/transaction-manager';
+import { AuthService } from '../../auth.service';
+import { UserRepository } from '../../../user/user.repository';
 import { ITokenProvider, TokenPayload } from '../../../../infrastructure/token-provider';
-import { buildUser, buildRegisterPayload } from '../factories/user.factory';
+import { buildUser } from '../../../user/tests/factories/user.factory';
+import { buildRegisterPayload } from '../factories/auth.factory';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -19,24 +18,13 @@ import bcrypt from 'bcrypt';
 function makeService(repoPartial: Partial<UserRepository> = {}) {
   const mockRepository = repoPartial as UserRepository;
 
-  const mockCacheService: ICacheService = {
-    getOrSet: jest.fn().mockImplementation((_key, fetcher) => fetcher()),
-    delPattern: jest.fn(),
-  };
-
-  const mockTxManager: Partial<ITransactionManager> = {
-    runInTransaction: jest.fn().mockImplementation((cb) => cb({})),
-  };
-
   const mockTokenProvider: ITokenProvider = {
     sign:   jest.fn().mockReturnValue('mock-jwt-token'),
     verify: jest.fn().mockReturnValue({ sub: 'user-id-1', role: 'USER' } as TokenPayload),
   };
 
-  const service = new UserService(
+  const service = new AuthService(
     mockRepository,
-    mockCacheService,
-    mockTxManager as ITransactionManager,
     mockTokenProvider,
   );
 
@@ -45,7 +33,7 @@ function makeService(repoPartial: Partial<UserRepository> = {}) {
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe('UserService — auth methods (Unit)', () => {
+describe('AuthService — auth methods (Unit)', () => {
 
   // ── register ───────────────────────────────────────────────────────────────
 
@@ -136,7 +124,7 @@ describe('UserService — auth methods (Unit)', () => {
     });
 
     it('throws 500 when no tokenProvider is configured', () => {
-      const service = new UserService({} as UserRepository);
+      const service = new AuthService({} as UserRepository);
       expect(() => service.verifyToken('token')).toThrow(expect.objectContaining({ statusCode: 500 }));
     });
   });

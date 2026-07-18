@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from './auth.controller';
 import { validate } from '../../middlewares/validate';
-import { registerSchema, loginSchema } from '../user/user.schemas.extended';
+import { registerSchema, loginSchema } from './auth.schemas';
 
 /**
  * Creates and returns the Auth router.
