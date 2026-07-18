@@ -18,7 +18,7 @@ export function createCategoryModule(deps: AppDeps): AppModule {
   const repository = new CategoryRepository(deps.db.category, deps.cacheService, relations);
   const service     = new CategoryService(repository, deps.cacheService, deps.transactionManager);
   const controller  = new CategoryController(service);
-  const router      = createCategoryRouter(controller);
+  const router      = createCategoryRouter(controller, deps.tokenProvider);
 
   return { prefix: '/api/categorys', router };
 }

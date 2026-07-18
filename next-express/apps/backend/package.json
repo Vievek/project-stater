@@ -22,7 +22,8 @@
     "sync-query-config": "ts-node --project scripts/tsconfig.json scripts/generator_scripts/sync_query_config.ts",
     "sync-m2m-methods": "ts-node --project scripts/tsconfig.json scripts/generator_scripts/sync_m2m_methods.ts",
     "sync": "pnpm run generate && pnpm run sync-types && pnpm run sync-schemas && pnpm run sync-factories && pnpm run sync-query-config && pnpm run sync-m2m-methods",
-    "docs:routes": "ts-node --project scripts/tsconfig.json scripts/analytics_scripts/generate-route-docs.ts"
+    "docs:routes": "ts-node --project scripts/tsconfig.json scripts/analytics_scripts/generate-route-docs.ts",
+    "docs:manifest": "ts-node --project scripts/tsconfig.json scripts/generator_scripts/generate-manifest.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

@@ -1,0 +1,28 @@
+{
+  "modules": [
+    {
+      "moduleName": "category",
+      "modelName": "Category",
+      "basePath": "/api/categorys",
+      "manifestFile": "category.manifest.json"
+    },
+    {
+      "moduleName": "tag",
+      "modelName": "Tag",
+      "basePath": "/api/tags",
+      "manifestFile": "tag.manifest.json"
+    },
+    {
+      "moduleName": "todo",
+      "modelName": "Todo",
+      "basePath": "/api/todos",
+      "manifestFile": "todo.manifest.json"
+    },
+    {
+      "moduleName": "user",
+      "modelName": "User",
+      "basePath": "/api/users",
+      "manifestFile": "user.manifest.json"
+    }
+  ]
+}
