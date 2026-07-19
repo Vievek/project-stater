@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { JwtTokenProvider } from '../../token-provider';
+import { JwtTokenProvider } from '../token-provider';
 
 /**
  * Property-based tests for JwtTokenProvider.

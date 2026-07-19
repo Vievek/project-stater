@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { rbacMiddleware } from '../../rbac';
-import { TokenPayload } from '../../../infrastructure/token-provider';
+import { rbacMiddleware } from '../rbac';
+import { TokenPayload } from '../../infrastructure/token-provider';
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
