@@ -79,8 +79,4 @@ export class TodoService extends BaseService<Todo, TodoRepository> {
             }
             return super.update(id, data, notFoundMessage);
     }
-
-    async roughfunction(){
-        return true;
-    }
 }

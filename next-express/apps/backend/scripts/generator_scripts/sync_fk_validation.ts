@@ -87,12 +87,15 @@ async function main() {
         });
       }
 
+      // Compute insertIndex for the repository (before the first optional parameter)
+      let insertIndex = constructor.getParameters().findIndex(p => p.isOptional());
+      if (insertIndex === -1) insertIndex = constructor.getParameters().length;
+
       // 2. Add to Service Constructor
       const hasParam = constructor.getParameters().some(p => p.getName() === repoParamName);
       if (!hasParam) {
-        const firstOptionalIndex = constructor.getParameters().findIndex(p => p.isOptional());
-        const insertIndex = firstOptionalIndex === -1 ? constructor.getParameters().length : firstOptionalIndex;
-        constructor.insertParameter(insertIndex, {
+        const actualInsertIndex = Math.min(insertIndex, constructor.getParameters().length);
+        constructor.insertParameter(actualInsertIndex, {
           name: repoParamName,
           type: repoClassName,
           scope: Scope.Private,
@@ -128,10 +131,122 @@ async function main() {
              if (serviceInit) {
                  const currentArgs = serviceInit.getArguments().map(a => a.getText());
                  if (!currentArgs.includes(repoParamName)) {
-                     serviceInit.addArgument(repoParamName);
+                     // Get the actual number of arguments passed so far. If less than insertIndex, pad or use current length.
+                     const actualInsertIndex = Math.min(insertIndex, currentArgs.length);
+                     serviceInit.insertArgument(actualInsertIndex, repoParamName);
                  }
              }
          }
+      }
+
+      // 7. Update test files
+      const testPaths = [
+        path.join(moduleDir, `tests/unit/${modelNameLower}.service.test.ts`),
+        path.join(moduleDir, `tests/property/${modelNameLower}.service.prop.test.ts`)
+      ];
+      
+      for (const testPath of testPaths) {
+          if (!fs.existsSync(testPath)) continue;
+          const testFile = project.getSourceFile(testPath) || project.addSourceFileAtPath(testPath);
+          
+          const hasTestRepoImport = testFile.getImportDeclarations().some(
+            imp => imp.getNamedImports().some(n => n.getName() === repoClassName)
+          );
+          if (!hasTestRepoImport) {
+            testFile.addImportDeclaration({
+              namedImports: [repoClassName],
+              moduleSpecifier: `../../../${relatedModelCamel}/${relatedModelCamel}.repository`
+            });
+          }
+
+          const mockRepoVarName = `mock${relatedModelCap}Repository`;
+          const describeBlocks = testFile.getDescendantsOfKind(SyntaxKind.CallExpression).filter(c => c.getExpression().getText() === 'describe');
+          if (describeBlocks.length > 0) {
+              const mainDescribe = describeBlocks[0];
+              const arrowFunc = mainDescribe.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
+              if (arrowFunc) {
+                  const body = arrowFunc.getBody().asKind(SyntaxKind.Block);
+                  if (body) {
+                      const hasLet = body.getVariableStatements().some(v => v.getText().includes(mockRepoVarName));
+                      if (!hasLet) {
+                          body.insertVariableStatement(0, {
+                              declarationKind: 'let' as any,
+                              declarations: [{ name: mockRepoVarName, type: `Partial<${repoClassName}>` }]
+                          });
+                      }
+
+                      const beforeEachCalls = body.getDescendantsOfKind(SyntaxKind.CallExpression).filter(c => c.getExpression().getText() === 'beforeEach');
+                      if (beforeEachCalls.length > 0) {
+                          const beArrow = beforeEachCalls[0].getArguments()[0]?.asKind(SyntaxKind.ArrowFunction);
+                          if (beArrow) {
+                              const beBody = beArrow.getBody().asKind(SyntaxKind.Block);
+                              if (beBody) {
+                                  const hasInit = beBody.getStatements().some(s => s.getText().includes(`${mockRepoVarName} =`));
+                                  if (!hasInit) {
+                                      beBody.insertStatements(0, `${mockRepoVarName} = { findById: jest.fn() };`);
+                                  }
+                                  
+                                  const newExprs = beBody.getDescendantsOfKind(SyntaxKind.NewExpression).filter(n => n.getExpression().getText() === `${model.name}Service`);
+                                  if (newExprs.length > 0) {
+                                      const newExpr = newExprs[0];
+                                      const currentArgs = newExpr.getArguments().map(a => a.getText());
+                                      const argText = `${mockRepoVarName} as ${repoClassName}`;
+                                      if (!currentArgs.some(a => a.includes(mockRepoVarName))) {
+                                          const actualInsertIndex = Math.min(insertIndex, currentArgs.length);
+                                          newExpr.insertArgument(actualInsertIndex, argText);
+                                      }
+                                  }
+                              }
+                          }
+                      }
+
+                      // Add unit tests for FK validations if this is a unit test
+                      if (testPath.includes('unit')) {
+                          for (const method of ['create', 'update']) {
+                              let methodDescribe = body.getDescendantsOfKind(SyntaxKind.CallExpression).find(c => 
+                                  c.getExpression().getText() === 'describe' && 
+                                  c.getArguments()[0]?.getText().includes(method)
+                              );
+                              
+                              if (!methodDescribe) {
+                                  body.addStatements(`
+  describe('${method}', () => {
+  });
+`);
+                                  methodDescribe = body.getDescendantsOfKind(SyntaxKind.CallExpression).find(c => 
+                                      c.getExpression().getText() === 'describe' && 
+                                      c.getArguments()[0]?.getText().includes(method)
+                                  );
+                              }
+
+                              if (methodDescribe) {
+                                  const methodArrow = methodDescribe.getArguments()[1]?.asKind(SyntaxKind.ArrowFunction);
+                                  if (methodArrow) {
+                                      const methodBody = methodArrow.getBody().asKind(SyntaxKind.Block);
+                                      if (methodBody) {
+                                          const testName = `should throw an error if the ${relatedModelCamel} is not found`;
+                                          const hasTest = methodBody.getDescendantsOfKind(SyntaxKind.CallExpression).some(c => 
+                                              (c.getExpression().getText() === 'it' || c.getExpression().getText() === 'test') && 
+                                              c.getArguments()[0]?.getText().includes(testName)
+                                          );
+                                          
+                                          if (!hasTest) {
+                                              const action = method === 'create' ? `service.create({ ${fkField.name}: '1', title: 'Test' })` : `service.update('1', { ${fkField.name}: '1' })`;
+                                              methodBody.addStatements(`
+    it('${testName}', async () => {
+      (${mockRepoVarName}.findById as jest.Mock).mockResolvedValue(null);
+      await expect(${action}).rejects.toThrow('${fkField.relatedModel} not found');
+    });
+`);
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
       }
     }
 
@@ -161,11 +276,11 @@ async function main() {
        statements += `    return super.create(data);`;
        createMethod.setBodyText(statements);
     } else {
-        if (!createMethod.getText().includes('findById')) {
-            let statements = ``;
-            for (const fkField of fkFields) {
-               const relatedModelCamel = camelCase(fkField.relatedModel!);
-               const repoParamName = `${relatedModelCamel}Repository`;
+        let statements = ``;
+        for (const fkField of fkFields) {
+           const relatedModelCamel = camelCase(fkField.relatedModel!);
+           const repoParamName = `${relatedModelCamel}Repository`;
+           if (!createMethod.getText().includes(`data.${fkField.name}`)) {
                statements += `
     if (data.${fkField.name}) {
         const relatedRecord = await this.${repoParamName}.findById(data.${fkField.name});
@@ -174,7 +289,9 @@ async function main() {
         }
     }
 `;
-            }
+           }
+        }
+        if (statements !== '') {
             statements += createMethod.getBodyText() || `return super.create(data);`;
             createMethod.setBodyText(statements);
         }
@@ -205,11 +322,11 @@ async function main() {
        statements += `    return super.update(id, data, notFoundMessage);`;
        updateMethod.setBodyText(statements);
     } else {
-        if (!updateMethod.getText().includes('findById')) {
-            let statements = ``;
-            for (const fkField of fkFields) {
-               const relatedModelCamel = camelCase(fkField.relatedModel!);
-               const repoParamName = `${relatedModelCamel}Repository`;
+        let statements = ``;
+        for (const fkField of fkFields) {
+           const relatedModelCamel = camelCase(fkField.relatedModel!);
+           const repoParamName = `${relatedModelCamel}Repository`;
+           if (!updateMethod.getText().includes(`data.${fkField.name}`)) {
                statements += `
     if (data.${fkField.name}) {
         const relatedRecord = await this.${repoParamName}.findById(data.${fkField.name});
@@ -218,7 +335,9 @@ async function main() {
         }
     }
 `;
-            }
+           }
+        }
+        if (statements !== '') {
             statements += updateMethod.getBodyText() || `return super.update(id, data, notFoundMessage);`;
             updateMethod.setBodyText(statements);
         }
@@ -243,3 +362,7 @@ async function main() {
 }
 
 main().catch(console.error);
+
+
+//TODO : create fk deletion script and check all the script in that angle
+//TODO : Change the create and delete test generation into parameterised method

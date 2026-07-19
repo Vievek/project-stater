@@ -4,14 +4,17 @@ import { ICacheService } from '../../../../utils/cache-manager';
 import { ITransactionManager } from '../../../../utils/transaction-manager';
 import { buildTodoList } from '../factories/todo.factory';
 import fc from 'fast-check';
+import { UserRepository } from "../../../user/user.repository";
 
 describe('TodoService (Property Tests)', () => {
+    let mockUserRepository: Partial<UserRepository>;
   let mockRepository: Partial<TodoRepository>;
   let mockCacheService: ICacheService;
   let mockTxManager: Partial<ITransactionManager>;
   let service: TodoService;
 
   beforeEach(() => {
+      mockUserRepository = { findById: jest.fn() };
     mockRepository = {
       findAllLatest: jest.fn(),
     };
@@ -26,8 +29,7 @@ describe('TodoService (Property Tests)', () => {
     };
 
     service = new TodoService(
-      mockRepository as TodoRepository,
-      mockCacheService,
+      mockRepository as TodoRepository, mockUserRepository as UserRepository, mockCacheService,
       mockTxManager as ITransactionManager
     );
   });
