@@ -5,6 +5,7 @@ import { TodoRepository } from './todo.repository';
 import { TodoService } from './todo.service';
 import { TodoController } from './todo.controller';
 import { createTodoRouter } from './todo.routes';
+import { UserRepository } from "../user/user.repository";
 
 /**
  * Todo module factory.
@@ -14,9 +15,10 @@ import { createTodoRouter } from './todo.routes';
  * via injection — it never imports from config/ or infrastructure/ directly.
  */
 export function createTodoModule(deps: AppDeps): AppModule {
+    const userRepository = new UserRepository(deps.db.user, deps.cacheService);
   const relations  = new PrismaRelationAdapter<Todo>(deps.db.todo);
   const repository = new TodoRepository(deps.db.todo, deps.cacheService, relations);
-  const service     = new TodoService(repository, deps.cacheService, deps.transactionManager);
+  const service     = new TodoService(repository, deps.cacheService, deps.transactionManager, userRepository);
   const controller  = new TodoController(service);
   const router      = createTodoRouter(controller, deps.tokenProvider);
 

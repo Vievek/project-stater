@@ -5,13 +5,13 @@ import { QueryOptions } from '../../utils/query-builder';
 import { CacheManager, ICacheService } from '../../utils/cache-manager';
 import { ITransactionManager } from '../../utils/transaction-manager';
 import { logger } from '../../utils/logger';
+import { UserRepository } from "../user/user.repository";
 
 export class TodoService extends BaseService<Todo, TodoRepository> {
   private cacheManager: CacheManager;
 
   constructor(
-    repository: TodoRepository,
-    cacheService?: ICacheService,
+    repository: TodoRepository, private readonly userRepository: UserRepository, cacheService?: ICacheService,
     private transactionManager?: ITransactionManager
   ) {
     super(repository);
@@ -57,4 +57,30 @@ export class TodoService extends BaseService<Todo, TodoRepository> {
       };
     });
   }
+
+    async create(data: any): Promise<Todo> {
+
+            if (data.userId) {
+                const relatedRecord = await this.userRepository.findById(data.userId);
+                if (!relatedRecord) {
+                    throw new Error("User not found");
+                }
+            }
+            return super.create(data);
+    }
+
+    async update(id: string, data: any, notFoundMessage?: string): Promise<Todo> {
+
+            if (data.userId) {
+                const relatedRecord = await this.userRepository.findById(data.userId);
+                if (!relatedRecord) {
+                    throw new Error("User not found");
+                }
+            }
+            return super.update(id, data, notFoundMessage);
+    }
+
+    async roughfunction(){
+        return true;
+    }
 }
