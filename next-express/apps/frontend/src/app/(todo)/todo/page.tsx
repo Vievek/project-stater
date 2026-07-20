@@ -1,0 +1,18 @@
+import React from 'react';
+import { getTodosAction } from '@/modules/todo';
+import { TodoTable } from '@/modules/todo';
+
+export default async function TodosPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+  // Pass search params to action for server-side filtering/pagination
+  const data = await getTodosAction(searchParams);
+  
+  // Example hardcoded pagination props, normally you'd get these from the API response
+  const pageCount = 1; 
+  const totalItems = data.length;
+
+  return (
+    <div className="p-8 max-w-7xl mx-auto">
+      <TodoTable data={data} pageCount={pageCount} totalItems={totalItems} />
+    </div>
+  );
+}

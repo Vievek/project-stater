@@ -68,5 +68,5 @@ export class BaseApiClient<T, CreateDTO = any, UpdateDTO = any> {
   }
 }
 
-//TODO : run and check 
-//TODO : work on scripts and generators
+//Fgen : run and check 
+//Fgen : make the frontend scripts to work with base classes 
