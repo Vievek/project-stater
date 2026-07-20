@@ -23,7 +23,7 @@ export class BaseApiClient<T, CreateDTO = any, UpdateDTO = any> {
 
     // Automatically inject auth token if running on the server
     try {
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       const token = cookieStore.get('token')?.value;
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
@@ -68,6 +68,5 @@ export class BaseApiClient<T, CreateDTO = any, UpdateDTO = any> {
   }
 }
 
-//TODO : check all the common files are correct what else need to be added 
-//TODO : add all the common files we plan
+//TODO : run and check 
 //TODO : work on scripts and generators

@@ -54,7 +54,7 @@ describe('Auth Actions', () => {
       vi.mocked(authService.login).mockResolvedValue(authResponse);
 
       // Act
-      await loginAction({}, formData);
+      await loginAction(credentials as any);
 
       // Assert
       expect(authService.login).toHaveBeenCalledWith(credentials);
@@ -72,7 +72,12 @@ describe('Auth Actions', () => {
       vi.mocked(authService.login).mockRejectedValue(error);
 
       // Act
-      const result = await loginAction({}, formData);
+      let result: any;
+      try {
+        await loginAction(credentials as any);
+      } catch (e: any) {
+        result = { error: e.message };
+      }
 
       // Assert
       expect(result).toEqual({ error: error.message });
@@ -85,11 +90,14 @@ describe('Auth Actions', () => {
         fc.asyncProperty(fc.string(), fc.string(), async (emailStr, passwordStr) => {
           if (emailStr.includes('@') && passwordStr.length >= 8) return; 
 
-          const formData = new FormData();
-          formData.append('email', emailStr);
-          formData.append('password', passwordStr);
-
-          const result = await loginAction({}, formData);
+          const credentials = { email: emailStr, password: passwordStr };
+          
+          let result: any;
+          try {
+            await loginAction(credentials as any);
+          } catch (e: any) {
+            result = { error: e.message };
+          }
           
           expect(result).toEqual({ error: 'Invalid form data' });
           expect(authService.login).not.toHaveBeenCalled();
@@ -108,7 +116,7 @@ describe('Auth Actions', () => {
       vi.mocked(authService.register).mockResolvedValue(authResponse);
 
       // Act
-      await registerAction({}, formData);
+      await registerAction(credentials as any);
 
       // Assert
       expect(authService.register).toHaveBeenCalledWith(credentials);
@@ -126,7 +134,12 @@ describe('Auth Actions', () => {
       vi.mocked(authService.register).mockRejectedValue(error);
 
       // Act
-      const result = await registerAction({}, formData);
+      let result: any;
+      try {
+        await registerAction(credentials as any);
+      } catch (e: any) {
+        result = { error: e.message };
+      }
 
       // Assert
       expect(result).toEqual({ error: error.message });
@@ -139,12 +152,14 @@ describe('Auth Actions', () => {
         fc.asyncProperty(fc.string(), fc.string(), fc.string(), async (nameStr, emailStr, passwordStr) => {
           if (nameStr.length >= 2 && emailStr.includes('@') && passwordStr.length >= 8) return; 
 
-          const formData = new FormData();
-          formData.append('name', nameStr);
-          formData.append('email', emailStr);
-          formData.append('password', passwordStr);
+          const credentials = { name: nameStr, email: emailStr, password: passwordStr };
 
-          const result = await registerAction({}, formData);
+          let result: any;
+          try {
+            await registerAction(credentials as any);
+          } catch (e: any) {
+            result = { error: e.message };
+          }
           
           expect(result).toEqual({ error: 'Invalid form data' });
           expect(authService.register).not.toHaveBeenCalled();

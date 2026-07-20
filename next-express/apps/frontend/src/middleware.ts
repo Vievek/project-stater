@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isAuthorized } from './lib/utils/rbac';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
@@ -19,6 +20,11 @@ export function middleware(request: NextRequest) {
   if (token && isAuthPage) {
     // Redirect authenticated users away from login/register
     return NextResponse.redirect(new URL('/todos', request.url)); // Default dashboard
+  }
+
+  // Check RBAC permissions for the route
+  if (token && !isAuthorized(request.nextUrl.pathname, token)) {
+    return NextResponse.redirect(new URL('/unauthorized', request.url));
   }
 
   return NextResponse.next();
