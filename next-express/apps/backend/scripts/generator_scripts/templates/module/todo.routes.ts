@@ -68,6 +68,9 @@ export function createTodoRouter(controller: TodoController, tokenProvider?: ITo
     create: createTodoSchema,
     update: updateTodoSchema,
     delete: deleteTodoSchema,
+    // Note: To completely disable an endpoint, pass `false` instead of a schema.
+    // e.g., create: false // This will ensure the POST route is never created.
+    deleteAll: false, // Disabled by default for safety
   });
 
   // ---------------------------------------------------------------------------

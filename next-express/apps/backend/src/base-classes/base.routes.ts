@@ -5,10 +5,12 @@ import { ZodSchema, z } from 'zod';
 import { idParamSchema, paginationSchema } from '../shared/schemas';
 
 export interface BaseRouteSchemas {
-  get?: ZodSchema<any>;
-  create?: ZodSchema<any>;
-  update?: ZodSchema<any>;
-  delete?: ZodSchema<any>;
+  getAll?: ZodSchema<any> | false;
+  get?: ZodSchema<any> | false;
+  create?: ZodSchema<any> | false;
+  update?: ZodSchema<any> | false;
+  delete?: ZodSchema<any> | false;
+  deleteAll?: boolean; // pass false to disable
 }
 
 const defaultIdSchema = z.object({ params: idParamSchema });
@@ -31,34 +33,49 @@ export function createBaseRouter<T, C extends BaseController<T, any>>(
 ): Router {
   const router = Router();
 
-  // getAll typically supports pagination via query
-  router.get('/', validate(defaultPaginationSchema), controller.getAll);
-
-  if (schemas?.get) {
-    router.get('/:id', validate(schemas.get), controller.getById);
-  } else {
-    router.get('/:id', validate(defaultIdSchema), controller.getById);
+  if (schemas?.getAll !== false) {
+    if (schemas?.getAll && typeof schemas.getAll !== 'boolean') {
+      router.get('/', validate(schemas.getAll), controller.getAll);
+    } else {
+      router.get('/', validate(defaultPaginationSchema), controller.getAll);
+    }
   }
 
-  if (schemas?.create) {
-    router.post('/', validate(schemas.create), controller.create);
-  } else {
-    router.post('/', controller.create);
+  if (schemas?.get !== false) {
+    if (schemas?.get && typeof schemas.get !== 'boolean') {
+      router.get('/:id', validate(schemas.get), controller.getById);
+    } else {
+      router.get('/:id', validate(defaultIdSchema), controller.getById);
+    }
   }
 
-  if (schemas?.update) {
-    router.put('/:id', validate(schemas.update), controller.update);
-  } else {
-    router.put('/:id', validate(defaultIdSchema), controller.update);
+  if (schemas?.create !== false) {
+    if (schemas?.create && typeof schemas.create !== 'boolean') {
+      router.post('/', validate(schemas.create), controller.create);
+    } else {
+      router.post('/', controller.create);
+    }
   }
 
-  if (schemas?.delete) {
-    router.delete('/:id', validate(schemas.delete), controller.delete);
-  } else {
-    router.delete('/:id', validate(defaultIdSchema), controller.delete);
+  if (schemas?.update !== false) {
+    if (schemas?.update && typeof schemas.update !== 'boolean') {
+      router.put('/:id', validate(schemas.update), controller.update);
+    } else {
+      router.put('/:id', validate(defaultIdSchema), controller.update);
+    }
   }
 
-  router.delete('/', controller.deleteAll);
+  if (schemas?.delete !== false) {
+    if (schemas?.delete && typeof schemas.delete !== 'boolean') {
+      router.delete('/:id', validate(schemas.delete), controller.delete);
+    } else {
+      router.delete('/:id', validate(defaultIdSchema), controller.delete);
+    }
+  }
+
+  if (schemas?.deleteAll !== false) {
+    router.delete('/', controller.deleteAll);
+  }
 
   return router;
 }

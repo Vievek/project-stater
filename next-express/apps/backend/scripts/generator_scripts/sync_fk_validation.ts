@@ -366,3 +366,10 @@ main().catch(console.error);
 
 //TODO : create fk deletion script and check all the script in that angle
 //TODO : Change the create and delete test generation into parameterised method
+//TODO : create new project on cdk stack
+
+
+//TODO : idempotency
+//TODO : concurrency and race condition
+//TODO : Rate limiting
+//TODO : fault tolerance
