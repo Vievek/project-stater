@@ -70,4 +70,3 @@ export class BaseApiClient<T, CreateDTO = any, UpdateDTO = any> {
 
 //Fgen : run and check 
 //Fgen : make the frontend scripts to work with base classes 
-//Fgen : understand what is api,service,action files do why that seperation there
